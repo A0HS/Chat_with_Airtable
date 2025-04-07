@@ -23,50 +23,64 @@ RECENT_TURNS_FOR_GPT = 3  # 최근 대화 턴 수 (GPT context에 포함)
 
 # ✅ API 키 로딩
 def read_api_key_from_file(file_path):
+    # 키 이름 추출 (파일명에서 .txt 제거)
+    key_name = file_path.replace(".txt", "")
+    
     try:
-        # 1. Streamlit secrets에서 찾기
-        key_name = file_path.replace(".txt", "")
-        if st.secrets and key_name in st.secrets:
-            print(f"✅ Streamlit secrets에서 {key_name} 키를 로드했습니다.")
-            return st.secrets[key_name]
-            
-        # 2. 파일에서 찾기 (로컬 개발용)
+        # 1. Streamlit secrets에서 키 찾기 - global 섹션 내에서 확인
+        if hasattr(st, 'secrets'):
+            if 'global' in st.secrets and key_name in st.secrets['global']:
+                print(f"✅ Streamlit secrets의 global 섹션에서 {key_name} 키를 로드했습니다")
+                return st.secrets['global'][key_name]
+            elif key_name in st.secrets:
+                print(f"✅ Streamlit secrets에서 {key_name} 키를 로드했습니다")
+                return st.secrets[key_name]
+        
+        # 2. 파일에서 키 찾기 (로컬 개발용)
         with open(file_path, 'r') as file:
             key = file.read().strip()
-            print(f"✅ {file_path} 파일에서 키를 로드했습니다.")
+            print(f"✅ {file_path} 파일에서 키를 로드했습니다")
             return key
+            
     except FileNotFoundError:
-        # 3. 환경 변수에서 시도
-        env_var = os.environ.get(file_path.replace(".txt", ""))
+        # 3. 환경 변수에서 키 찾기
+        env_var = os.environ.get(key_name)
         if env_var:
-            print(f"✅ 환경 변수 {file_path.replace('.txt', '')}에서 키를 로드했습니다.")
+            print(f"✅ 환경 변수 {key_name}에서 키를 로드했습니다")
             return env_var
         
-        st.error(f"⚠️ {file_path} 파일을 찾을 수 없고, 환경 변수도 설정되지 않았습니다.")
+        # 모든 시도 실패
+        st.error(f"⚠️ {file_path} 파일을 찾을 수 없고, 환경 변수도 설정되지 않았습니다")
         return None
+        
     except Exception as e:
-        st.error(f"⚠️ 파일 읽기 오류: {file_path} → {e}")
+        st.error(f"⚠️ 키 로드 오류: {file_path} → {e}")
         return None
 
-# 시크릿 접근 테스트 코드 (임시)
+# 시크릿 접근 테스트 코드
 st.write("### Streamlit Secrets 테스트")
 try:
     if hasattr(st, 'secrets'):
         st.write("✅ st.secrets가 존재합니다")
         st.write(f"st.secrets의 키들: {list(st.secrets.keys())}")
         
-        if 'Airtable_Personal_access_token_BIGTURN' in st.secrets:
-            st.write("✅ Airtable 키가 secrets에 존재합니다")
-            # 키 값의 처음 5자만 표시
-            st.write(f"Airtable 키의 처음 5자: {st.secrets['Airtable_Personal_access_token_BIGTURN'][:5]}...")
-        else:
-            st.write("❌ Airtable 키가 secrets에 존재하지 않습니다")
+        if 'global' in st.secrets:
+            st.write("✅ global 섹션이 존재합니다")
+            st.write(f"global 섹션의 키들: {list(st.secrets['global'].keys())}")
             
-        if 'OpenAI_API_KEY' in st.secrets:
-            st.write("✅ OpenAI 키가 secrets에 존재합니다")
-            st.write(f"OpenAI 키의 처음 5자: {st.secrets['OpenAI_API_KEY'][:5]}...")
+            if 'Airtable_Personal_access_token_BIGTURN' in st.secrets['global']:
+                st.write("✅ Airtable 키가 global 섹션에 존재합니다")
+                st.write(f"Airtable 키의 처음 5자: {st.secrets['global']['Airtable_Personal_access_token_BIGTURN'][:5]}...")
+            else:
+                st.write("❌ Airtable 키가 global 섹션에 존재하지 않습니다")
+                
+            if 'OpenAI_API_KEY' in st.secrets['global']:
+                st.write("✅ OpenAI 키가 global 섹션에 존재합니다")
+                st.write(f"OpenAI 키의 처음 5자: {st.secrets['global']['OpenAI_API_KEY'][:5]}...")
+            else:
+                st.write("❌ OpenAI 키가 global 섹션에 존재하지 않습니다")
         else:
-            st.write("❌ OpenAI 키가 secrets에 존재하지 않습니다")
+            st.write("❌ global 섹션이 존재하지 않습니다")
     else:
         st.write("❌ st.secrets가 존재하지 않습니다")
 except Exception as e:
