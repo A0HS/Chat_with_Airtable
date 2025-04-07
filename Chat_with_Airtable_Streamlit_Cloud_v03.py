@@ -24,15 +24,28 @@ RECENT_TURNS_FOR_GPT = 3  # 최근 대화 턴 수 (GPT context에 포함)
 # ✅ API 키 로딩
 def read_api_key_from_file(file_path):
     try:
+        # 1. Streamlit secrets에서 찾기
+        key_name = file_path.replace(".txt", "")
+        if st.secrets and key_name in st.secrets:
+            print(f"✅ Streamlit secrets에서 {key_name} 키를 로드했습니다.")
+            return st.secrets[key_name]
+            
+        # 2. 파일에서 찾기 (로컬 개발용)
         with open(file_path, 'r') as file:
-            return file.read().strip()
-    except Exception as e:
-        # 파일이 없는 경우 환경 변수에서 시도
+            key = file.read().strip()
+            print(f"✅ {file_path} 파일에서 키를 로드했습니다.")
+            return key
+    except FileNotFoundError:
+        # 3. 환경 변수에서 시도
         env_var = os.environ.get(file_path.replace(".txt", ""))
         if env_var:
+            print(f"✅ 환경 변수 {file_path.replace('.txt', '')}에서 키를 로드했습니다.")
             return env_var
         
-        st.error(f"[파일 읽기 오류] {file_path} → {e}")
+        st.error(f"⚠️ {file_path} 파일을 찾을 수 없고, 환경 변수도 설정되지 않았습니다.")
+        return None
+    except Exception as e:
+        st.error(f"⚠️ 파일 읽기 오류: {file_path} → {e}")
         return None
 
 # 환경 설정 - 파일이나 환경변수에서 로드
