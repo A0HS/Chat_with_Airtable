@@ -11,11 +11,13 @@ import traceback
 import requests
 import pandas as pd
 import numpy as np
-import openai
 import streamlit as st
 import datetime
 import math
 import collections
+
+# proxy 해결을 위한 수정
+from openai import OpenAI
 
 # ✅ 설정
 st.set_page_config(page_title="Chat with Airtable", page_icon="🤖")
@@ -89,7 +91,6 @@ except Exception as e:
 # 환경 설정 - 파일이나 환경변수에서 로드
 AIRTABLE_API_KEY = read_api_key_from_file("Airtable_Personal_access_token_BIGTURN.txt")
 OPENAI_API_KEY = read_api_key_from_file("OpenAI_API_KEY.txt")
-openai.api_key = OPENAI_API_KEY
 
 # ✅ Airtable 데이터 로딩 함수
 def load_airtable_bases():
@@ -202,9 +203,14 @@ def execute_code(code_str, local_vars):
         return {"success": False, "error": error_msg}
 
 def ask_gpt(messages):
-    """GPT API 호출"""
     try:
-        response = openai.chat.completions.create(
+        # HTTP 헤더 명시적 설정
+        import requests
+        openai.requestssession = requests.Session()
+        openai.requestssession.headers = {}
+        
+        client = OpenAI(api_key=OPENAI_API_KEY)
+        response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=messages,
             max_tokens=1500
