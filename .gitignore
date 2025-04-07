@@ -1,0 +1,47 @@
+# API 키 파일만 무시
+*_API_KEY.txt
+*_access_token*.txt
+
+# Streamlit 시크릿 파일
+.streamlit/secrets.toml
+
+# Python 가상환경
+venv/
+env/
+.env/
+.venv/
+
+# Python 캐시 파일
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+
+# 운영체제 파일
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 에디터 설정
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 로그 파일
+*.log
+
+# 데이터 파일 (필요에 따라 조정)
+*.csv
+*.xlsx
+*.xls
+*.json
+*.sqlite
+*.db
+
+# API 키 파일
+*.txt
+!requirements.txt
