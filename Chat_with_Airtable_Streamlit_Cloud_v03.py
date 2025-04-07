@@ -203,7 +203,7 @@ def execute_code(code_str, local_vars):
 
 def ask_gpt(messages):
     try:
-        response = openai.Chat.Completion.create(
+        response = openai.chat.completions.create(
             model="gpt-4o-mini",  # 실제 사용할 모델명에 맞춰 수정
             messages=messages,
             max_tokens=1500
