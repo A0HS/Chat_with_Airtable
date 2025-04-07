@@ -48,6 +48,30 @@ def read_api_key_from_file(file_path):
         st.error(f"⚠️ 파일 읽기 오류: {file_path} → {e}")
         return None
 
+# 시크릿 접근 테스트 코드 (임시)
+st.write("### Streamlit Secrets 테스트")
+try:
+    if hasattr(st, 'secrets'):
+        st.write("✅ st.secrets가 존재합니다")
+        st.write(f"st.secrets의 키들: {list(st.secrets.keys())}")
+        
+        if 'Airtable_Personal_access_token_BIGTURN' in st.secrets:
+            st.write("✅ Airtable 키가 secrets에 존재합니다")
+            # 키 값의 처음 5자만 표시
+            st.write(f"Airtable 키의 처음 5자: {st.secrets['Airtable_Personal_access_token_BIGTURN'][:5]}...")
+        else:
+            st.write("❌ Airtable 키가 secrets에 존재하지 않습니다")
+            
+        if 'OpenAI_API_KEY' in st.secrets:
+            st.write("✅ OpenAI 키가 secrets에 존재합니다")
+            st.write(f"OpenAI 키의 처음 5자: {st.secrets['OpenAI_API_KEY'][:5]}...")
+        else:
+            st.write("❌ OpenAI 키가 secrets에 존재하지 않습니다")
+    else:
+        st.write("❌ st.secrets가 존재하지 않습니다")
+except Exception as e:
+    st.write(f"❌ 오류 발생: {str(e)}")
+
 # 환경 설정 - 파일이나 환경변수에서 로드
 AIRTABLE_API_KEY = read_api_key_from_file("Airtable_Personal_access_token_BIGTURN.txt")
 OPENAI_API_KEY = read_api_key_from_file("OpenAI_API_KEY.txt")
