@@ -1,8 +1,8 @@
-# 실행 순서
-# 폴더 이동: cd "D:\Codes\my-projects\Dev-Chat_with_Airtable\Chat_with_Airtable_Streamlit_Cloud_v03"
-# 가상 환경 생성 (Windows): python -m venv venv
-# 패키지 설치: pip install -r requirements.txt
-# 스트림릿 실행: streamlit run Chat_with_Airtable_Streamlit_Cloud_v2.py
+# Execution Order
+# Change directory: cd "D:\Codes\my-projects\Dev-Chat_with_Airtable\Chat_with_Airtable_Streamlit_Cloud_v03"
+# Create virtual environment (Windows): python -m venv venv
+# Install packages: pip install -r requirements.txt
+# Run Streamlit: streamlit run Chat_with_Airtable_Streamlit_Cloud_v2.py
 
 import os
 import json
@@ -17,83 +17,83 @@ import math
 import collections
 import openai
 
-# ✅ 설정
+# ✅ Configuration
 st.set_page_config(page_title="Chat with Airtable", page_icon="🤖")
-RECENT_TURNS_FOR_GPT = 3  # 최근 대화 턴 수 (GPT context에 포함)
+RECENT_TURNS_FOR_GPT = 3  # Recent conversation turns (included in GPT context)
 
-# ✅ API 키 로딩
+# ✅ API Key Loading
 def read_api_key_from_file(file_path):
-    # 키 이름 추출 (파일명에서 .txt 제거)
+    # Extract key name (remove .txt from filename)
     key_name = file_path.replace(".txt", "")
     
     try:
-        # 1. Streamlit secrets에서 키 찾기 - global 섹션 내에서 확인
+        # 1. Find key in Streamlit secrets - check in global section
         if hasattr(st, 'secrets'):
             if 'global' in st.secrets and key_name in st.secrets['global']:
-                print(f"✅ Streamlit secrets의 global 섹션에서 {key_name} 키를 로드했습니다")
+                print(f"✅ Loaded {key_name} key from global section in Streamlit secrets")
                 return st.secrets['global'][key_name]
             elif key_name in st.secrets:
-                print(f"✅ Streamlit secrets에서 {key_name} 키를 로드했습니다")
+                print(f"✅ Loaded {key_name} key from Streamlit secrets")
                 return st.secrets[key_name]
         
-        # 2. 파일에서 키 찾기 (로컬 개발용)
+        # 2. Find key in file (for local development)
         with open(file_path, 'r') as file:
             key = file.read().strip()
-            print(f"✅ {file_path} 파일에서 키를 로드했습니다")
+            print(f"✅ Loaded key from {file_path} file")
             return key
             
     except FileNotFoundError:
-        # 3. 환경 변수에서 키 찾기
+        # 3. Find key in environment variables
         env_var = os.environ.get(key_name)
         if env_var:
-            print(f"✅ 환경 변수 {key_name}에서 키를 로드했습니다")
+            print(f"✅ Loaded key from environment variable {key_name}")
             return env_var
         
-        # 모든 시도 실패
-        st.error(f"⚠️ {file_path} 파일을 찾을 수 없고, 환경 변수도 설정되지 않았습니다")
+        # All attempts failed
+        st.error(f"⚠️ Cannot find {file_path} file, and environment variable is not set")
         return None
         
     except Exception as e:
-        st.error(f"⚠️ 키 로드 오류: {file_path} → {e}")
+        st.error(f"⚠️ Key loading error: {file_path} → {e}")
         return None
 
-# 시크릿 접근 테스트 코드
-st.write("### Streamlit Secrets 테스트")
+# Secret access test code
+st.write("### Streamlit Secrets Test")
 try:
     if hasattr(st, 'secrets'):
-        st.write("✅ st.secrets가 존재합니다")
-        st.write(f"st.secrets의 키들: {list(st.secrets.keys())}")
+        st.write("✅ st.secrets exists")
+        st.write(f"Keys in st.secrets: {list(st.secrets.keys())}")
         
         if 'global' in st.secrets:
-            st.write("✅ global 섹션이 존재합니다")
-            st.write(f"global 섹션의 키들: {list(st.secrets['global'].keys())}")
+            st.write("✅ global section exists")
+            st.write(f"Keys in global section: {list(st.secrets['global'].keys())}")
             
             if 'Airtable_Personal_access_token_BIGTURN' in st.secrets['global']:
-                st.write("✅ Airtable 키가 global 섹션에 존재합니다")
-                st.write(f"Airtable 키의 처음 5자: {st.secrets['global']['Airtable_Personal_access_token_BIGTURN'][:5]}...")
+                st.write("✅ Airtable key exists in global section")
+                st.write(f"First 5 characters of Airtable key: {st.secrets['global']['Airtable_Personal_access_token_BIGTURN'][:5]}...")
             else:
-                st.write("❌ Airtable 키가 global 섹션에 존재하지 않습니다")
+                st.write("❌ Airtable key does not exist in global section")
                 
             if 'OpenAI_API_KEY' in st.secrets['global']:
-                st.write("✅ OpenAI 키가 global 섹션에 존재합니다")
-                st.write(f"OpenAI 키의 처음 5자: {st.secrets['global']['OpenAI_API_KEY'][:5]}...")
+                st.write("✅ OpenAI key exists in global section")
+                st.write(f"First 5 characters of OpenAI key: {st.secrets['global']['OpenAI_API_KEY'][:5]}...")
             else:
-                st.write("❌ OpenAI 키가 global 섹션에 존재하지 않습니다")
+                st.write("❌ OpenAI key does not exist in global section")
         else:
-            st.write("❌ global 섹션이 존재하지 않습니다")
+            st.write("❌ global section does not exist")
     else:
-        st.write("❌ st.secrets가 존재하지 않습니다")
+        st.write("❌ st.secrets does not exist")
 except Exception as e:
-    st.write(f"❌ 오류 발생: {str(e)}")
+    st.write(f"❌ Error occurred: {str(e)}")
 
-# 환경 설정 - 파일이나 환경변수에서 로드
+# Environment setup - load from file or environment variables
 AIRTABLE_API_KEY = read_api_key_from_file("Airtable_Personal_access_token_BIGTURN.txt")
 OPENAI_API_KEY = read_api_key_from_file("OpenAI_API_KEY.txt")
 openai.api_key = OPENAI_API_KEY
 
-# ✅ Airtable 데이터 로딩 함수
+# ✅ Airtable Data Loading Functions
 def load_airtable_bases():
-    """모든 Airtable 베이스 정보 가져오기"""
+    """Get all Airtable base information"""
     url = "https://api.airtable.com/v0/meta/bases"
     headers = {"Authorization": f"Bearer {AIRTABLE_API_KEY}"}
 
@@ -101,11 +101,11 @@ def load_airtable_bases():
         response = requests.get(url, headers=headers)
         return response.json().get("bases", [])
     except Exception as e:
-        st.error(f"❌ 베이스 목록 불러오기 실패: {e}")
+        st.error(f"❌ Failed to load base list: {e}")
         return []
 
 def get_all_tables_in_base(base_id):
-    """특정 베이스의 모든 테이블 정보 가져오기"""
+    """Get all table information for a specific base"""
     url = f"https://api.airtable.com/v0/meta/bases/{base_id}/tables"
     headers = {"Authorization": f"Bearer {AIRTABLE_API_KEY}"}
 
@@ -113,22 +113,22 @@ def get_all_tables_in_base(base_id):
         response = requests.get(url, headers=headers)
         data = response.json()
         tables = data.get("tables", [])
-        st.write(f"✅ 테이블 {len(tables)}개 불러옴")
+        st.write(f"✅ Loaded {len(tables)} tables")
         return [(t["name"], t["id"]) for t in tables]
     except Exception as e:
-        st.error(f"❌ 테이블 목록 불러오기 실패: {e}")
+        st.error(f"❌ Failed to load table list: {e}")
         return []
 
 @st.cache_data(ttl=3600)
 def get_airtable_data(base_id, table_id):
-    """특정 베이스의 특정 테이블 데이터 전체 가져오기"""
+    """Get all data for a specific table in a base"""
     url = f"https://api.airtable.com/v0/{base_id}/{table_id}"
     headers = {"Authorization": f"Bearer {AIRTABLE_API_KEY}"}
     all_records = []
     offset = None
 
     try:
-        with st.spinner(f"테이블 데이터 불러오는 중..."):
+        with st.spinner(f"Loading table data..."):
             while True:
                 params = {"pageSize": 100}
                 if offset:
@@ -137,9 +137,9 @@ def get_airtable_data(base_id, table_id):
                 res = requests.get(url, headers=headers, params=params)
                 data = res.json()
 
-                # 에러 응답 시 출력
+                # Output if error response
                 if 'error' in data:
-                    st.error(f"❌ 에러 발생: {data['error']}")
+                    st.error(f"❌ Error occurred: {data['error']}")
                     break
 
                 all_records.extend(data.get("records", []))
@@ -147,25 +147,25 @@ def get_airtable_data(base_id, table_id):
                 if not offset:
                     break
 
-        st.success(f"  ✅ 총 {len(all_records)}개 레코드 불러옴")
+        st.success(f"  ✅ Loaded {len(all_records)} records total")
         return all_records
     except Exception as e:
-        st.error(f"❌ 데이터 로딩 실패: {e}")
+        st.error(f"❌ Data loading failed: {e}")
         return None
 
-# ✅ 데이터프레임 변환 및 정리 함수
+# ✅ DataFrame Conversion and Cleanup Functions
 def clean_column_name(col):
-    """컬럼명 정제: 특수문자 제거 및 스네이크 케이스로 변환"""
+    """Clean column name: remove special characters and convert to snake case"""
     col = re.sub(r"[^\w\s]", "", col)
     col = col.strip().replace(" ", "_").lower()
     return col
 
 def normalize_table_name(name):
-    """테이블명 정제: 특수문자를 언더스코어로 대체"""
+    """Clean table name: replace special characters with underscores"""
     return re.sub(r'\W+', '_', name.strip().lower())
 
 def is_likely_date_column(series):
-    """문자열 컬럼 중 날짜 패턴 비율이 높으면 True"""
+    """Return True if string column has high ratio of date patterns"""
     if not series.dtype == object:
         return False
     sample = series.dropna().astype(str).head(20)
@@ -173,78 +173,78 @@ def is_likely_date_column(series):
     return match_count >= max(3, len(sample) // 2)
 
 def should_exclude_column(col_name):
-    """명백히 사람을 의미하는 컬럼들 제외"""
+    """Exclude columns that clearly refer to people"""
     exclude_keywords = ['_by', 'manager', 'agent', 'consultant', 'email']
     col_lower = col_name.lower()
     return any(kw in col_lower for kw in exclude_keywords)
 
-# ✅ GPT 관련 유틸 함수
+# ✅ GPT Related Utility Functions
 def extract_code_blocks(response_text):
-    """GPT 응답에서 코드 블록만 추출"""
+    """Extract only code blocks from GPT response"""
     match = re.search(r"```(?:python)?\s*([\s\S]+?)```", response_text)
     if not match:
-        return response_text  # 코드 블록이 없는 경우 전체 텍스트 반환
+        return response_text  # Return entire text if no code blocks found
     
     code = match.group(1).strip()
     return code
 
 def execute_code(code_str, local_vars):
-    """코드 실행 및 결과 반환"""
+    """Execute code and return results"""
     if not isinstance(code_str, str):
-        return {"success": False, "error": "코드 실행 오류: exec() 인자는 문자열이어야 합니다."}
+        return {"success": False, "error": "Code execution error: exec() argument must be a string."}
     try:
         exec(code_str, {}, local_vars)
         result = local_vars.get("result")
         return {"success": True, "result": result}
     except Exception as e:
         error_msg = traceback.format_exc()
-        st.error(f"코드 실행 오류: {str(e)}")
+        st.error(f"Code execution error: {str(e)}")
         return {"success": False, "error": error_msg}
 
 def ask_gpt(messages):
     try:
         response = openai.chat.completions.create(
-            model="gpt-4o-mini",  # 실제 사용할 모델명에 맞춰 수정
+            model="gpt-4o-mini",  # Modify to match actual model name
             messages=messages,
             max_tokens=1500
         )
         return response.choices[0].message.content
     except Exception as e:
-        st.error(f"GPT 요청 실패: {e}")
+        st.error(f"GPT request failed: {e}")
         return None
 
 def sanitize_colon_spacing(text):
-    """마크다운에서 '문장:' 형식을 잘못 인식하는 것을 방지"""
+    """Prevent misinterpretation of 'sentence:' format in markdown"""
     lines = text.split('\n')
     cleaned = []
     for line in lines:
-        # 링크인 경우 제외 (http://, https:// 등)
+        # Exclude links (http://, https://, etc)
         if "://" not in line:
-            # 콜론 뒤에 공백이 없는 경우 추가
+            # Add space after colon if missing
             line = re.sub(r"(\S):(\S)", r"\1: \2", line)
         cleaned.append(line)
     return "\n".join(cleaned)
 
-# ✅ 세션 상태 초기화
+# ✅ Initialize Session State
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
-# ✅ 대화 렌더링 함수
+# ✅ Chat Rendering Function
 def render_chat_history():
     st.markdown("---")
     for msg in st.session_state.chat_history:            
         if msg.get("type") == "code":
             sanitized_code = msg["content"]
-            # 마크다운 헤더 기호(#) 이스케이프
+            # Escape markdown header symbols (#)
             sanitized_code = re.sub(r"^(\s*)#{1,6}\s*", r"\1# ", sanitized_code, flags=re.MULTILINE)
-            # HTML 태그 이스케이프
+            # Escape HTML tags
             sanitized_code = sanitized_code.replace("<", "&lt;").replace(">", "&gt;")
-            # 모든 마크다운 특수문자 이스케이프 처리
+            # Escape all markdown special characters
             sanitized_code = sanitized_code.replace("*", "\\*")
             sanitized_code = sanitized_code.replace("_", "\\_")
             sanitized_code = sanitized_code.replace("`", "\\`")
 
-            # pre 태그 사용으로 마크다운 형식 완전히 무효화
+            # Use pre tags to completely disable markdown formatting
             st.markdown(f"""
             <pre style='background-color: #e8e8e8; padding: 12px; border-radius: 8px; font-family: monospace; white-space: pre-wrap; margin: 10px 0;'>
 {sanitized_code}
@@ -266,65 +266,65 @@ def render_chat_history():
     st.markdown("<div style='clear: both;'></div>", unsafe_allow_html=True)
 
 def get_recent_chat_messages(n=RECENT_TURNS_FOR_GPT):
-    """최근 n턴의 대화 내용만 반환"""
+    """Return only the last n turns of conversation"""
     recent = st.session_state.chat_history[-n*2:]
     return [
         {"role": m["role"], "content": m["content"]}
         for m in recent if m.get("type") == "text"
     ]
 
-# ===== 메인 UI 시작 =====
+# ===== Main UI Start =====
 st.title("💬 Chat with Airtable")
-st.write("에어테이블 데이터에 기반하여 질문하고 응답받을 수 있습니다.")
+st.write("You can ask questions and get responses based on your Airtable data.")
 
-# ✅ 베이스 선택 UI
+# ✅ Base Selection UI
 bases = load_airtable_bases()
 if not bases:
-    st.error("사용 가능한 에어테이블 베이스가 없습니다. API 키를 확인하세요.")
+    st.error("No Airtable bases available. Please check your API key.")
     st.stop()
 
-# 베이스가 1개면 자동 선택, 아니면 사용자가 선택
+# Auto-select if only one base, otherwise user selects
 if len(bases) == 1:
     selected_base = bases[0]
-    st.success(f"✅ 1개 베이스 자동 선택됨: {selected_base['name']} ({selected_base['id']})")
+    st.success(f"✅ Auto-selected 1 base: {selected_base['name']} ({selected_base['id']})")
 else:
     base_options = {base["name"]: base for base in bases}
-    selected_base_name = st.selectbox("🗂 사용할 베이스를 선택하세요:", list(base_options.keys()))
+    selected_base_name = st.selectbox("🗂 Select a base to use:", list(base_options.keys()))
     selected_base = base_options[selected_base_name]
-    st.success(f"✅ 선택된 베이스: {selected_base['name']} ({selected_base['id']})")
+    st.success(f"✅ Selected base: {selected_base['name']} ({selected_base['id']})")
 
-# ✅ 선택한 베이스의 테이블 목록 가져오기
+# ✅ Get table list for selected base
 base_id = selected_base["id"]
 base_name = selected_base["name"]
 tables = get_all_tables_in_base(base_id)
 
 if not tables:
-    st.warning("선택한 베이스에 테이블이 없습니다.")
+    st.warning("No tables in selected base.")
     st.stop()
 
-# 테이블 정보 표시
-st.write(f"📋 테이블 목록 ({len(tables)}개):")
+# Display table information
+st.write(f"📋 Table list ({len(tables)} tables):")
 for i, (table_name, table_id) in enumerate(tables):
     st.write(f"- {table_name} ({table_id})")
 
-# ✅ 모든 테이블의 데이터 가져오기
-with st.expander("📦 테이블 데이터 로딩", expanded=False):
+# ✅ Load data for all tables
+with st.expander("📦 Table Data Loading", expanded=False):
     all_data = {}
     progress = st.progress(0)
     
     for i, (table_name, table_id) in enumerate(tables):
-        st.write(f"🔄 테이블 로딩 중: {table_name}")
+        st.write(f"🔄 Loading table: {table_name}")
         records = get_airtable_data(base_id, table_id)
         if records:
             all_data[table_name] = records
         
-        # 진행률 표시
+        # Show progress
         progress.progress((i+1)/len(tables))
     
-    st.success(f"✅ 모든 테이블 데이터 로딩 완료! 총 {len(all_data)}개 테이블 로드됨")
+    st.success(f"✅ All table data loading complete! Loaded {len(all_data)} tables total")
 
-# ✅ 데이터프레임 변환 및 정리 과정
-with st.expander("🔄 데이터프레임 변환", expanded=False):
+# ✅ DataFrame Conversion and Cleanup Process
+with st.expander("🔄 DataFrame Conversion", expanded=False):
     dataframes = {}
     
     for table_name, records in all_data.items():
@@ -332,30 +332,30 @@ with st.expander("🔄 데이터프레임 변환", expanded=False):
         df = pd.DataFrame(fields_only)
         
         if df.empty:
-            st.warning(f"⚠️ {table_name}: 데이터가 없거나 필드가 없습니다.")
+            st.warning(f"⚠️ {table_name}: No data or fields present.")
             continue
             
-        # 컬럼 정제
+        # Clean columns
         df.columns = [clean_column_name(c) for c in df.columns]
         
-        # NaN-like 딕셔너리 처리
+        # Handle NaN-like dictionaries
         for col in df.columns:
             df[col] = df[col].apply(
                 lambda x: np.nan if isinstance(x, dict) and x.get("specialValue") == "NaN" else x
             )
         
-        # 변수명으로 사용할 이름 정제
+        # Clean name for variable use
         df_name = normalize_table_name(table_name)
         
-        # 변수 등록
+        # Register variable
         dataframes[df_name] = df
         
         st.write(f"✅ {df_name} ({table_name}): {df.shape[0]} rows, {df.shape[1]} columns")
     
-    st.success("🎉 모든 테이블이 DataFrame으로 변환되었습니다.")
+    st.success("🎉 All tables have been converted to DataFrames.")
 
-# ✅ 날짜 필드 자동 인식 및 변환
-with st.expander("📅 날짜 필드 자동 인식", expanded=False):
+# ✅ Auto-detect and convert date fields
+with st.expander("📅 Date Field Auto-Detection", expanded=False):
     datetime_columns_summary = []
     
     for df_name, df in dataframes.items():
@@ -375,13 +375,13 @@ with st.expander("📅 날짜 필드 자동 인식", expanded=False):
                         converted_cols.append(col)
                         datetime_columns_summary.append((df_name, col))
                 except Exception as e:
-                    st.write(f"⚠️ [{df_name}] '{col}' 변환 실패: {e}")
+                    st.write(f"⚠️ [{df_name}] '{col}' conversion failed: {e}")
         
         if converted_cols:
-            st.write(f"✅ {df_name}: 날짜 필드 변환 완료 → {', '.join(converted_cols)}")
+            st.write(f"✅ {df_name}: Date field conversion complete → {', '.join(converted_cols)}")
     
-    # 날짜 파생 필드 자동 생성
-    st.write("🧩 날짜 파생 필드 생성 중...")
+    # Auto-generate date derivative fields
+    st.write("🧩 Generating date derivative fields...")
     
     for df_name, df in dataframes.items():
         added = []
@@ -394,15 +394,15 @@ with st.expander("📅 날짜 필드 자동 인식", expanded=False):
                     df[f"{col}_quarter"] = df[col].dt.to_period("Q").astype(str)
                     added.append(col)
                 except Exception as e:
-                    st.write(f"⚠️ [{df_name}] {col} 파생 필드 생성 실패: {e}")
+                    st.write(f"⚠️ [{df_name}] Failed to create derivative fields for {col}: {e}")
         
         if added:
-            st.write(f"✅ {df_name}: 파생 필드 생성 완료 → {', '.join(added)}")
+            st.write(f"✅ {df_name}: Derivative field creation complete → {', '.join(added)}")
     
-    st.success("🎉 모든 날짜 파생 필드 생성 완료!")
+    st.success("🎉 All date derivative fields creation complete!")
 
-# ✅ 범주형 필드(unique 값 적은 필드) 추출
-with st.expander("🧩 범주형 필드 추출", expanded=False):
+# ✅ Extract categorical fields (fields with few unique values)
+with st.expander("🧩 Categorical Field Extraction", expanded=False):
     categorical_summary = {}
     
     for df_name, df in dataframes.items():
@@ -410,7 +410,7 @@ with st.expander("🧩 범주형 필드 추출", expanded=False):
         
         for col in df.columns:
             if df[col].dtype in ["object", "category"]:
-                # 리스트나 딕셔너리 들어있는 컬럼은 제외
+                # Exclude columns containing lists or dictionaries
                 sample_vals = df[col].dropna().head(10)
                 if len(sample_vals) > 0 and sample_vals.apply(lambda x: isinstance(x, (list, dict))).any():
                     continue
@@ -420,15 +420,15 @@ with st.expander("🧩 범주형 필드 추출", expanded=False):
                     if 0 < len(unique_vals) <= 10:
                         cat_fields[col] = list(map(str, unique_vals))
                 except Exception as e:
-                    st.write(f"⚠️ {df_name} / {col} unique 추출 실패: {e}")
+                    st.write(f"⚠️ {df_name} / {col} unique extraction failed: {e}")
         
         if cat_fields:
             categorical_summary[df_name] = cat_fields
-            st.write(f"✅ {df_name}: {len(cat_fields)}개 필드 추출됨")
+            st.write(f"✅ {df_name}: {len(cat_fields)} fields extracted")
     
-    st.success("✅ 범주형 필드 추출 완료!")
+    st.success("✅ Categorical field extraction complete!")
 
-# ✅ 메타데이터 요약 생성
+# ✅ Generate Metadata Summary
 slim_meta_summary = {}
 
 for df_name, df in dataframes.items():
@@ -452,7 +452,7 @@ for df_name, df in dataframes.items():
                     continue
                 unique_vals = col_data.dropna().unique()
                 if 0 < len(unique_vals) <= 10:
-                    col_entry["values"] = list(map(str, unique_vals[:10]))  # 최대 10개 포함
+                    col_entry["values"] = list(map(str, unique_vals[:10]))  # Include max 10
             except:
                 continue
         
@@ -460,7 +460,7 @@ for df_name, df in dataframes.items():
         elif np.issubdtype(col_data.dtype, np.number):
             col_entry["dtype"] = "numeric"
         
-        # 포함 대상만 기록
+        # Record only if entry exists
         if col_entry:
             columns[col] = col_entry
     
@@ -470,30 +470,30 @@ for df_name, df in dataframes.items():
             "columns": columns
         }
 
-# 메타데이터 요약 간략히 표시
-with st.expander("📋 메타데이터 요약", expanded=False):
+# Display metadata summary briefly
+with st.expander("📋 Metadata Summary", expanded=False):
     st.write(json.dumps({k: v for k, v in list(slim_meta_summary.items())[:1]}, indent=2))
-    st.success("✅ 메타데이터 생성 완료!")
+    st.success("✅ Metadata generation complete!")
 
-# ✅ 질문 입력란
-user_question = st.chat_input("질문을 입력하세요")
+# ✅ Question Input
+user_question = st.chat_input("Enter your question")
 
-# GPT 코드 생성 및 실행 로직 수정
-# 사용자 질문이 있는 경우
+# GPT Code Generation and Execution Logic
+# If user question exists
 if user_question:
-    # 사용자 질문 저장
+    # Save user question
     st.session_state.chat_history.append({
         "role": "user", "content": user_question, "type": "text"
     })
     
-    # GPT 코드 생성 요청
-    with st.spinner("🤖 GPT가 질문 분석 중..."):
-        # 각 데이터프레임의 실제 모양 정보 추가
+    # Request GPT code generation
+    with st.spinner("🤖 GPT is analyzing the question..."):
+        # Add actual shape information for each dataframe
         df_shapes = {}
         for df_name, df in dataframes.items():
             sample_df = df.head(3).copy()
             
-            # 날짜 타입 컬럼을 문자열로 변환
+            # Convert date type columns to strings
             for col in sample_df.columns:
                 if pd.api.types.is_datetime64_any_dtype(sample_df[col]):
                     sample_df[col] = sample_df[col].astype(str)
@@ -505,70 +505,70 @@ if user_question:
             }
             
         prompt = f"""
-        다음은 Airtable에서 추출한 테이블 구조 요약입니다:
+        Here is a summary of the table structures extracted from Airtable:
 
         {json.dumps(slim_meta_summary, indent=2, ensure_ascii=False)}
         
-        데이터프레임 실제 구조 정보:
+        Actual DataFrame structure information:
         {json.dumps(df_shapes, indent=2, ensure_ascii=False)}
 
-        사용자 질문:
+        User question:
         {user_question}
 
-        [분석 환경 안내]
-        - 모든 테이블은 이미 pandas DataFrame으로 로딩되어 있습니다.
-        - 다음 라이브러리들이 이미 임포트되어 있습니다:
+        [Analysis Environment Information]
+        - All tables are already loaded as pandas DataFrames.
+        - The following libraries are already imported:
           - pandas as pd
           - numpy as np
           - datetime
           - re
           - math
           - collections
-        - 각 테이블은 snake_case로 정제된 이름의 변수로 존재합니다. 예시: "Client Database" → client_database
-        - 데이터를 조회하거나 집계할 때 반드시 이 DataFrame을 기준으로 분석하세요.
-        - 실행 결과는 반드시 result 변수에 담고, print() 등은 사용하지 마세요.
-        - result 변수는 int, float, str, list, dict 등 간단한 타입으로 설정해주세요.
-        - 코드를 작성할 때는 위에 제공된 데이터프레임 실제 구조 정보를 참고하세요.
-        - 코드만 반환하고, 설명은 생략하세요.
+        - Each table exists as a variable with a snake_case cleaned name. Example: "Client Database" → client_database
+        - Always analyze based on these DataFrames when querying or aggregating data.
+        - Always store execution results in the 'result' variable, and don't use print() etc.
+        - The 'result' variable should be set to a simple type like int, float, str, list, dict, etc.
+        - When writing code, refer to the actual DataFrame structure information provided above.
+        - Only return the code, without any explanations.
         """
         
         messages = [
-            {"role": "system", "content": "너는 Airtable 기반 데이터 분석 전문가야."},
+            {"role": "system", "content": "You are an Airtable-based data analysis expert."},
             {"role": "user", "content": prompt}
         ]
         
-        # 최대 재시도 횟수 설정
+        # Set maximum retry count
         max_retries = 3
         retry_count = 0
         code_success = False
         
         while retry_count < max_retries and not code_success:
             if retry_count > 0:
-                st.info(f"코드 실행 오류로 인해 재시도 중... ({retry_count}/{max_retries})")
+                st.info(f"Retrying due to code execution error... ({retry_count}/{max_retries})")
             
-            # GPT에 코드 요청
+            # Request code from GPT
             gpt_response = ask_gpt(messages)
             
             if not gpt_response:
-                st.warning("GPT 응답이 비어 있습니다.")
+                st.warning("GPT response is empty.")
                 break
                 
             code_str = extract_code_blocks(gpt_response)
             
             if not code_str:
-                st.warning("코드 블록을 찾을 수 없습니다.")
+                st.warning("Cannot find code block.")
                 break
             
-            # 코드 저장 (이전 코드가 있다면 업데이트)
+            # Save code (update if previous code exists)
             if retry_count == 0:
                 st.session_state.chat_history.append({
                     "type": "code", "content": code_str
                 })
             else:
-                # 이전 코드 업데이트
+                # Update previous code
                 st.session_state.chat_history[-1]["content"] = code_str
             
-            # 코드 실행
+            # Execute code
             local_vars = {
                 'pd': pd, 
                 'np': np, 
@@ -586,61 +586,61 @@ if user_question:
             except Exception as e:
                 error_msg = traceback.format_exc()
                 
-                # 오류가 발생했고, 재시도 횟수가 남아있는 경우
+                # If error occurred and retries remain
                 if retry_count < max_retries - 1:
-                    # 간략화된 오류 메시지 생성
+                    # Create simplified error message
                     simplified_error = re.sub(r'File ".*?", line \d+, in .*?\n', '', error_msg)
                     simplified_error = re.sub(r'File "<string>", line \d+, in <module>\n', '', simplified_error)
                     
-                    # GPT에게 오류 수정 요청
+                    # Request error fix from GPT
                     fix_prompt = f"""
-                    사용자의 질문: {user_question}
+                    User's question: {user_question}
                     
-                    당신이 생성한 원래 코드:
+                    Your original code:
                     ```python
                     {code_str}
                     ```
                     
-                    실행 중 다음 오류가 발생했습니다:
+                    The following error occurred during execution:
                     ```
                     {simplified_error}
                     ```
                     
-                    오류를 수정한 코드를 다시 제공해주세요. 다음 사항에 주의하세요:
-                    - 코드 블록(```) 안에 전체 코드를 포함시키세요
-                    - 오류의 원인을 파악하고 적절히 수정하세요
-                    - pandas는 'pd'로, numpy는 'np'로 이미 임포트되어 있습니다
-                    - result 변수에 결과를 저장해야 합니다
-                    - 코드만 반환하고, 설명은 생략하세요
+                    Please provide corrected code. Pay attention to the following:
+                    - Include the entire code in a code block (```)
+                    - Identify the cause of the error and fix it properly
+                    - pandas is already imported as 'pd', numpy as 'np'
+                    - The result must be stored in the 'result' variable
+                    - Only return the code, without any explanations
                     """
                     
                     messages = [
-                        {"role": "system", "content": "너는 Airtable 기반 데이터 분석 전문가야."},
+                        {"role": "system", "content": "You are an Airtable-based data analysis expert."},
                         {"role": "user", "content": fix_prompt}
                     ]
                 else:
-                    # 최대 재시도 횟수에 도달한 경우
-                    st.error(f"최대 재시도 횟수({max_retries}회)에 도달했습니다. 코드 실행에 실패했습니다.")
+                    # Maximum retry count reached
+                    st.error(f"Maximum retry count ({max_retries}) reached. Failed to execute code.")
             
             retry_count += 1
         
-        # 코드 실행 성공 후 자연어 설명 요청
+        # Request natural language explanation after successful code execution
         if code_success:
-            # 자연어 해석 요청
+            # Request natural language interpretation
             explain_prompt = f"""
-            사용자의 질문:
+            User's question:
             {user_question}
 
-            코드 실행 결과:
+            Code execution result:
             {result}
 
-            [지침]
-            - 결과를 직접적으로 해석해서 자연스럽게 말해주세요.
-            - 질문 내용을 반복하거나 요약하지 말고, 결과 자체에 초점을 맞춰 해석하세요.
+            [Instructions]
+            - Interpret the result directly and naturally.
+            - Don't repeat or summarize the question, focus on interpreting the result itself.
             """
             
             explain_messages = [
-                {"role": "system", "content": "친절한 분석가"},
+                {"role": "system", "content": "Friendly analyst"},
                 {"role": "user", "content": explain_prompt}
             ]
             
@@ -652,18 +652,18 @@ if user_question:
                     "role": "assistant", "content": explain_response, "type": "text"
                 })
             else:
-                st.warning("GPT 설명 생성 실패")
+                st.warning("GPT explanation generation failed")
         else:
-            # 모든 재시도에도 불구하고 실패한 경우
+            # Failed after all retries
             error_explain_prompt = f"""
-            사용자의 질문: {user_question}
+            User's question: {user_question}
             
-            코드 실행에 지속적으로 실패했습니다. 문제의 원인과 사용자가 질문을 바꾸거나 
-            데이터를 다르게 접근할 수 있는 방법을 친절하게 설명해주세요.
+            Code execution has consistently failed. Please kindly explain the cause of the problem and 
+            how the user could modify their question or approach the data differently.
             """
             
             error_messages = [
-                {"role": "system", "content": "친절한 데이터 전문가"},
+                {"role": "system", "content": "Friendly data expert"},
                 {"role": "user", "content": error_explain_prompt}
             ]
             
@@ -675,25 +675,25 @@ if user_question:
                 })
             else:
                 st.session_state.chat_history.append({
-                    "role": "assistant", "content": "코드 실행에 실패했습니다. 질문을 더 구체적으로 해주시거나 다른 방식으로 시도해 보세요.", 
+                    "role": "assistant", "content": "Code execution failed. Please make your question more specific or try a different approach.", 
                     "type": "text"
                 })
 
-# UI에 채팅 기록 표시
+# Display chat history in UI
 render_chat_history()
 
-# ✅ 앱 소개 사이드바
+# ✅ App Introduction Sidebar
 with st.sidebar:
     st.title("🤖 Chat with Airtable")
     st.markdown("""
-    ## 사용 방법
-    1. 에어테이블 베이스가 자동으로 연결됩니다.
-    2. 데이터는 pandas DataFrame으로 변환됩니다.
-    3. 질문을 입력하면 GPT가 코드를 생성하고 실행합니다.
-    4. 결과를 분석하여 답변을 제공합니다.
+    ## How to Use
+    1. Airtable bases are automatically connected.
+    2. Data is converted to pandas DataFrames.
+    3. When you enter a question, GPT generates and executes code.
+    4. Results are analyzed to provide an answer.
     
-    ## 데이터프레임 정보
+    ## DataFrame Information
     """)
     
     for df_name, df in dataframes.items():
-        st.markdown(f"**{df_name}**: {df.shape[0]}행 × {df.shape[1]}열")
+        st.markdown(f"**{df_name}**: {df.shape[0]} rows × {df.shape[1]} columns")
